@@ -1,0 +1,38 @@
+<div class="calculator">
+  <div class="calculator-screen">
+    <div class="previous-value">{{ previousValue }} {{ operation }}</div>
+    <div class="current-value">{{ display }}</div>
+  </div>
+  
+  <div class="calculator-buttons">
+    <!-- First row -->
+    <button class="btn btn-function" (click)="clear()">AC</button>
+    <button class="btn btn-function" (click)="clearEntry()">CE</button>
+    <button class="btn btn-function" (click)="delete()">⌫</button>
+    <button class="btn btn-operator" (click)="inputOperation('/')" [class.active]="operation === '/'">÷</button>
+    
+    <!-- Second row -->
+    <button class="btn btn-number" (click)="inputNumber('7')">7</button>
+    <button class="btn btn-number" (click)="inputNumber('8')">8</button>
+    <button class="btn btn-number" (click)="inputNumber('9')">9</button>
+    <button class="btn btn-operator" (click)="inputOperation('*')" [class.active]="operation === '*'">×</button>
+    
+    <!-- Third row -->
+    <button class="btn btn-number" (click)="inputNumber('4')">4</button>
+    <button class="btn btn-number" (click)="inputNumber('5')">5</button>
+    <button class="btn btn-number" (click)="inputNumber('6')">6</button>
+    <button class="btn btn-operator" (click)="inputOperation('-')" [class.active]="operation === '-'">−</button>
+    
+    <!-- Fourth row -->
+    <button class="btn btn-number" (click)="inputNumber('1')">1</button>
+    <button class="btn btn-number" (click)="inputNumber('2')">2</button>
+    <button class="btn btn-number" (click)="inputNumber('3')">3</button>
+    <button class="btn btn-operator" (click)="inputOperation('+')" [class.active]="operation === '+'">+</button>
+    
+    <!-- Fifth row -->
+    <button class="btn btn-function" (click)="toggleSign()">±</button>
+    <button class="btn btn-number" (click)="inputNumber('0')">0</button>
+    <button class="btn btn-number" (click)="inputNumber('.')">.</button>
+    <button class="btn btn-equals" (click)="calculate()">=</button>
+  </div>
+</div>
