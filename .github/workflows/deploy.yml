@@ -1,0 +1,100 @@
+name: Deploy Angular App to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect Angular project name
+        id: detect-project
+        run: |
+          if [ -f "angular.json" ]; then
+            # Extract first project name from angular.json
+            PROJECT_NAME=$(node -e "
+              const fs = require('fs');
+              const config = JSON.parse(fs.readFileSync('angular.json', 'utf8'));
+              const firstProject = Object.keys(config.projects)[0];
+              console.log(firstProject);
+            ")
+            echo "project-name=$PROJECT_NAME" >> $GITHUB_OUTPUT
+            echo "framework=angular" >> $GITHUB_OUTPUT
+            echo "Detected Angular project: $PROJECT_NAME"
+          else
+            echo "No Angular project detected"
+            echo "framework=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular project
+        if: steps.detect-project.outputs.framework == 'angular'
+        run: npm run build -- --base-href '/oldPromptsTesting1/'
+
+      - name: Copy index.html to 404.html for SPA routing
+        if: steps.detect-project.outputs.framework == 'angular'
+        run: |
+          DIST_DIR="dist"
+          if [ -f "angular.json" ]; then
+            # Get the output path from angular.json
+            OUTPUT_PATH=$(node -e "
+              const fs = require('fs');
+              const config = JSON.parse(fs.readFileSync('angular.json', 'utf8'));
+              const firstProject = Object.keys(config.projects)[0];
+              const outputPath = config.projects[firstProject].architect.build.options.outputPath;
+              console.log(outputPath);
+            ")
+            echo "Output path: $OUTPUT_PATH"
+            if [ -f "$OUTPUT_PATH/index.html" ]; then
+              cp "$OUTPUT_PATH/index.html" "$OUTPUT_PATH/404.html"
+              echo "Copied index.html to 404.html for SPA routing"
+            fi
+            echo "build-path=$OUTPUT_PATH" >> $GITHUB_ENV
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.build-path }}
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Output deployed page URL
+        run: |
+          echo "🚀 Deployment successful!"
+          echo "📄 Your Angular app is now live at: ${{ steps.deployment.outputs.page_url }}"
+          echo "🔗 Direct link: ${{ steps.deployment.outputs.page_url }}"
